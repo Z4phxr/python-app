@@ -7,16 +7,28 @@ jobs:
   docker-deploy:
     runs-on: ubuntu-latest
 
-    permissions:
-      contents: read
-
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+    - name: Create timestamp
+      run: echo "TS=$(date +%Y-%m-%d-%H-%M-%S)" >> $GITHUB_ENV
 
-      - name: Build and push image
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/python-app:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/python-app:latest
+    - name: Login to Docker Hub
+      run: |
+        echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+    - name: Build image
+      run: |
+        IMAGE="${{ secrets.DOCKERHUB_USERNAME }}/python-app"
+        docker build -t $IMAGE:latest .
+
+        # Tag wg SHA
+        docker tag $IMAGE:latest $IMAGE:${{ github.sha }}
+
+        # Tag wg timestamp
+        docker tag $IMAGE:latest $IMAGE:${{ env.TS }}
+
+        # Push all tags
+        docker push $IMAGE:latest
+        docker push $IMAGE:${{ github.sha }}
+        docker push $IMAGE:${{ env.TS }}
