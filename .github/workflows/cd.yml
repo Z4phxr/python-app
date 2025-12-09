@@ -6,13 +6,18 @@ on:
 jobs:
   docker-deploy:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write   # ⬅️ TO JEST KLUCZOWE!
+
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Login to GHCR
-      run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Login to GHCR
+        run: echo "${{ github.token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build and push
-      run: |
-        docker build -t ghcr.io/z4phxr/python-app:latest .
-        docker push ghcr.io/z4phxr/python-app:latest
+      - name: Build and push
+        run: |
+          docker build -t ghcr.io/z4phxr/python-app:latest .
+          docker push ghcr.io/z4phxr/python-app:latest
